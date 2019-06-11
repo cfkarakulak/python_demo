@@ -26,6 +26,10 @@ jobs:
           name: Build application Docker image
           command: |
             docker build -t app .
+      - run:
+          name: List licenses
+          command: |
+            docker run -it app /bin/sh -c 'pip3 install pip-licenses >/dev/null && pip-licenses --with-description --format=csv'
       - <<: *save-cache
 
 workflows:
