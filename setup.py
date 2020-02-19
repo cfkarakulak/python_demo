@@ -16,7 +16,7 @@ setup(
         "gunicorn==19.7.1",
         "requests>=2.20.0,<3.0",
         "Flask==1.0.2",
-        "Flask-Admin==1.5.3",
+        "Flask-Admin==1.5.5",
         "Flask-SQLAlchemy==2.3.2",
         "Flask-Login==0.4.1",
         "Flask-WTF>=0.14,<0.15",
