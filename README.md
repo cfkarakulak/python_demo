@@ -81,10 +81,13 @@ Go to https://ngrok.com/download and download the version that corresponds to yo
 
 If you're running over TLS make sure to set the host header to help flask know how to redirect to the host correctly.
 
-You can use a command like this:
-
+**If you have paid version of ngrok** you can use a command like this to have fixed subdomain:
 ```
-ngrok http  -subdomain=vgssl6 -host-header=tntq2xam5lo.sandbox.verygoodproxy.com 192.168.99.100:8080
+ngrok http  -subdomain=vgssl6 -host-header=tntq2xam5lo.sandbox.verygoodproxy.com 8080
+```
+**If you have free version of ngrok** you can use a command like this, and your domain will be different on each ngrok run:
+```
+ngrok http -host-header=tntq2xam5lo.sandbox.verygoodproxy.com 8080
 ```
 
 #### Step 2: Route requests to Payment Service to go via ngrok
@@ -99,6 +102,7 @@ docker run -it \
    -e VGS_PROCESSOR_ROOT_URL=https://063d7f2f.ngrok.io/charge \
    python_demo
 ```
+* NOTE: `user:pass` is an access credentials which you can find [on your dashboard](https://www.verygoodsecurity.com/docs/settings/access-credentials)
 
 ## Set up VGS
 Some quick tips on how to set up VGS connections for use with this application.
