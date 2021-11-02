@@ -99,7 +99,7 @@ docker run -it \
    -p 3000:3000 -p 3001:3001 -p 8080:8080 \
    --rm --name python_demo -v $(pwd):/opt/app/src \
    -e HTTPS_PROXY=https://user:pass@proxy.com:port \
-   -e VGS_PROCESSOR_ROOT_URL=https://063d7f2f.ngrok.io/charge \
+   -e VGS_PROCESSOR_ROOT_URL=https://e907262d.ngrok.io/charge \
    python_demo
 ```
 * NOTE: `user:pass` is an access credentials which you can find [on your dashboard](https://www.verygoodsecurity.com/docs/settings/access-credentials)
@@ -128,6 +128,25 @@ Some quick tips on how to set up VGS connections for use with this application.
     - `$.card`
     - `$.card_security_code`
 
+## Integration with VGS Satellite
+
+* Run this demo using ngrok, commands listed [here](#expose-to-internet)
+* Clone [VGS Satellite](https://github.com/verygoodsecurity/vgs-satellite)
+* Run VGS Satellite using default environment variables specified in .env
+```bash
+docker-compose up
+```
+* Run request:
+```bash
+curl -x http://localhost:1230 http://e907262d.ngrok.io/payment -d "name=Bob+Jones&billing_address=1+Dr+Carlton+B+Goodlett+Pl%2C+San+Francisco%2C+CA+94102&card-number=5105105105105100&card-expiration-date=12%2F20&card-security-code=123&url=verygoodsecurity.com"
+```
+* Open [http://localhost:1234](http://localhost:1234)
+* Wait for your requests to appear
+* Choose your request from the list
+* Click secure you payload
+* Check field you would like to secure
+* Click `Secure this payload`, then `View route configuration`
+* Download inbound/outbound route and reference instructions provided to import your first route on VGS Dashboard
 ## Used Technologies/Tools:
 
 HTML, CSS, JS, scss, Gulp, NPM, Git, Python
