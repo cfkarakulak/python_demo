@@ -23,7 +23,8 @@ RUN apk update &&\
     openssl \
     make    \
     nodejs  \
-    git &&\
+    git \
+    g++ &&\
     mkdir -p /opt/app
 
 # install pip ( in separate dir due to docker cache)
