@@ -21,7 +21,7 @@ An authorized user of Merchant Portal can charge the payment - this action initi
 
 In this exercise we will cover the following two scenarios
 
-#### Capture data without VGS
+### Capture data without VGS
 
 See how data flows through these services without VGS:
 
@@ -32,7 +32,7 @@ See how data flows through these services without VGS:
 
 You will see that payment card data is stored in the merchant's system bringing them in to PCI scope.
 
-#### Secure these services with VGS
+### Secure these services with VGS
 
 Configure VGS Proxy to redact sensitive data sent to the Order Service and reveal data when sending payment's information to Payment System:
 - go to https://dashboard.verygoodsecurity.com and configure VGS Proxy to redact the sensitive data on the way in (credit card number and CVV code)
@@ -90,6 +90,8 @@ ngrok http  -subdomain=vgssl6 -host-header=tntq2xam5lo.sandbox.verygoodproxy.com
 ngrok http -host-header=tntq2xam5lo.sandbox.verygoodproxy.com 8080
 ```
 
+NOTE: substiture `tntq2xam5lo` with your vault ID.
+
 #### Step 2: Route requests to Payment Service to go via ngrok
 
 To be able to configure VGS proxy for requests going to Payment Service(`/charge` endpoint) your app should route these requests via ngrok, `VGS_PROCESSOR_ROOT_URL` environment variable should be set:
@@ -98,11 +100,13 @@ To be able to configure VGS proxy for requests going to Payment Service(`/charge
 docker run -it \
    -p 3000:3000 -p 3001:3001 -p 8080:8080 \
    --rm --name python_demo -v $(pwd):/opt/app/src \
-   -e HTTPS_PROXY=https://user:pass@proxy.com:port \
+   -e HTTPS_PROXY=https://user:pass@tntq2xam5lo.sandbox.verygoodproxy.com:8443 \
    -e VGS_PROCESSOR_ROOT_URL=https://e907262d.ngrok.io/charge \
    python_demo
 ```
 * NOTE: `user:pass` is an access credentials which you can find [on your dashboard](https://www.verygoodsecurity.com/docs/settings/access-credentials)
+
+If Payment Service cannot connect to proxy vis HTTPS then try to use `http://user:pass@tntq2xam5lo.sandbox.verygoodproxy.com:8080` instead.
 
 ## Set up VGS
 Some quick tips on how to set up VGS connections for use with this application.
@@ -110,12 +114,25 @@ Some quick tips on how to set up VGS connections for use with this application.
 ### Inbound Connection
 (Reference: https://www.verygoodsecurity.com/docs/guides/inbound-connection).
 
-* Use reverse proxy URL to access Order Service, e.g. `https://tntywefqyrb.SANDBOX.verygoodproxy.com`
+* Use reverse proxy URL to access Order Service, e.g. `https://tntq2xam5lo.SANDBOX.verygoodproxy.com`
 * Set upstream to ngrok address, e.g. `https://e907262d.ngrok.io`
-* Filter condition should be PathInfo equals `/payment`
-* Operation is to **REDACT** form fields:
+* Filter condition should be "PathInfo" equals `/payment` and "ContentType" equals `application/x-www-form-urlencoded` 
+* Operation is to **REDACT** *FormData* fields :
     - `card-number`
     - `card-security-code`
+
+Test proxying of order placement with `curl`:
+```bash
+$ curl --request POST \
+  --url https://tntq2xam5lo.SANDBOX.verygoodproxy.com/payment \
+  --header 'Content-Type: application/x-www-form-urlencoded' \
+  --data 'name=Bob Jones' \
+  --data 'billing_address=1 Dr Carlton B Goodlett Pl, San Francisco, CA 94102' \
+  --data card-number=5105105105105100 \
+  --data card-expiration-date=12/20 \
+  --data card-security-code=123 \
+  --data url=verygoodsecurity.com
+```
 
 ### Outbound Connection
 (Reference: https://www.verygoodsecurity.com/docs/guides/outbound-connection).
@@ -127,6 +144,20 @@ Some quick tips on how to set up VGS connections for use with this application.
 * Operation is to **REVEAL** JSON fields:
     - `$.card`
     - `$.card_security_code`
+
+Test with `curl`:
+```bash
+curl --request POST \
+  --url https://e907262d.ngrok.io/charge \
+  --proxy https://user:pass@tntq2xam5lo.sandbox.verygoodproxy.com:8443
+  --header 'Content-Type: application/json' \
+  --data '{
+	"card": "tok_dev_3hm37e52nDVR7MDwB3ihwM", 
+	"card_expiration": "12/20",
+	"card_security_code": "123",
+	"amount": 1000
+}'
+```
 
 ## Integration with VGS Satellite
 
