@@ -87,9 +87,7 @@ loads = flask.json.loads
 
 class JSONEncoder(flask.json.JSONEncoder):
     def default(self, o):
-        if isinstance(o, CaseInsensitiveDict):
-            return dict(o)
-        return super(self, o)
+        return dict(o) if isinstance(o, CaseInsensitiveDict) else super(self, o)
 
 
 def jsonify(*args, **kwargs):
@@ -126,7 +124,7 @@ def json_safe(string, content_type='application/octet-stream'):
 def get_files():
     """Returns files dict from request context."""
 
-    files = dict()
+    files = {}
 
     for k, v in request.files.items():
         content_type = request.files[k].content_type or 'application/octet-stream'
@@ -160,14 +158,13 @@ def semiflatten(multi):
     """Convert a MutiDict into a regular dict. If there are more than one value
     for a key, the result will have a list of values for the key. Otherwise it
     will have the plain value."""
-    if multi:
-        result = multi.to_dict(flat=False)
-        for k, v in result.items():
-            if len(v) == 1:
-                result[k] = v[0]
-        return result
-    else:
+    if not multi:
         return multi
+    result = multi.to_dict(flat=False)
+    for k, v in result.items():
+        if len(v) == 1:
+            result[k] = v[0]
+    return result
 
 def get_url(request):
     """
@@ -211,10 +208,7 @@ def get_dict(*keys, **extras):
         method=request.method,
     )
 
-    out_d = dict()
-
-    for key in keys:
-        out_d[key] = d.get(key)
+    out_d = {key: d.get(key) for key in keys}
 
     out_d.update(extras)
 
@@ -353,7 +347,7 @@ def response(credentails, password, request):
             credentails.get('nonce', '').encode('utf-8'),
             HA2_value.encode('utf-8')
         ]), algorithm)
-    elif credentails.get('qop') == 'auth' or credentails.get('qop') == 'auth-int':
+    elif credentails.get('qop') in ['auth', 'auth-int']:
         for k in 'nonce', 'nc', 'cnonce', 'qop':
             if k not in credentails:
                 raise ValueError("%s required for response H" % k)
@@ -378,7 +372,7 @@ def check_digest_auth(user, passwd):
             return
         request_uri = request.script_root + request.path
         if request.query_string:
-            request_uri +=  '?' + request.query_string
+            request_uri += f'?{request.query_string}'
         response_hash = response(credentails, passwd, dict(uri=request_uri,
                                                            body=request.data,
                                                            method=request.method))

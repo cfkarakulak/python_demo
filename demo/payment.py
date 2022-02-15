@@ -61,9 +61,7 @@ class ProxySetting(db.Model):
         return proxy_setting
 
     def as_dict(self):
-        proxies = {}
-        for scheme in ['https', 'http']:
-            proxies[scheme] = urlunsplit(
+        return {scheme: urlunsplit(
                 (scheme,
                  '{PROXY_USERNAME}:{PROXY_PASSWORD}@{PROXY_URL}:{PROXY_PORT}'.format(
                      PROXY_USERNAME=self.proxy_username,
@@ -71,8 +69,7 @@ class ProxySetting(db.Model):
                      PROXY_URL=self.proxy_url,
                      PROXY_PORT=self.proxy_port,
                  ),
-                 '', None, None))
-        return proxies
+                 '', None, None)) for scheme in ['https', 'http']}
 
 
 def strip_scheme(target, value, oldvalue, initiator):
@@ -128,7 +125,7 @@ def _charge(payload, url=None):
 
     proxies = proxy_setting.as_dict() if proxy_setting else None
 
-    r = requests.post(
+    return requests.post(
         url,
         data=h.dumps(payload),
         headers={"Content-type": "application/json"},
@@ -137,7 +134,6 @@ def _charge(payload, url=None):
         #  under the "integration-docs" section
         verify='demo/static/vgs-sandbox.pem'
     )
-    return r
 
 
 class CustomView(ModelView):
